@@ -133,6 +133,7 @@ var activityCommandDelegate:CDVCommandDelegate?;
             locationManager.startUpdating(force: false);
             activityManager.startDetection();
         }
+        ;
 
         let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK)
         commandDelegate!.send(pluginResult, callbackId:command.callbackId)
@@ -179,30 +180,32 @@ var activityCommandDelegate:CDVCommandDelegate?;
     func onResume() {
         log(message: "App Resumed");
         background = false;
-
+        /*
         taskManager.endAllBackgroundTasks();
         locationManager.stopUpdating();
         activityManager.stopDetection();
+        */
     }
 
     func onSuspend() {
         log(message: "App Suspended. Enabled? \(enabled)");
         background = true;
-
+        /*
         if(enabled) {
             locationManager.startUpdating(force: true);
             activityManager.startDetection();
         }
+        */
     }
 
     func willResign() {
         log(message: "App Will Resign. Enabled? \(enabled)");
         background = true;
-
+        /*
         if(enabled) {
             locationManager.startUpdating(force: false);
             activityManager.startDetection();
-        }
+        }*/
     }
 
     /* Pinpoint our location with the following accuracy:
