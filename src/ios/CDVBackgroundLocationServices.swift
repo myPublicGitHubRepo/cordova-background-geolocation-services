@@ -135,7 +135,7 @@ var activityCommandDelegate:CDVCommandDelegate?;
             locationManager.startUpdating(force: false);
             activityManager.startDetection();
         //}
-        ;
+        
 
         let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK)
         commandDelegate!.send(pluginResult, callbackId:command.callbackId)
