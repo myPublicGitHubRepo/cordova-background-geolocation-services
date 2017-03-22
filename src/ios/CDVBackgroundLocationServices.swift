@@ -130,6 +130,8 @@ var activityCommandDelegate:CDVCommandDelegate?;
         log(message: "Are we in the background? \(background)");
         //starts anyway
         //if(background) {
+        log(message: "Starting location and detection");
+            
             locationManager.startUpdating(force: false);
             activityManager.startDetection();
         //}
@@ -593,8 +595,11 @@ class ActivityManager : NSObject {
     }
 
     func startDetection() {
+        log(message: "Detection started");
+        
         //NSLog("Activity Manager - Starting Detection %@", self.available);
         if(useActivityDetection == false) {
+            log(message: "Detection error");
             return;
         }
 
@@ -626,6 +631,7 @@ class ActivityManager : NSObject {
     }
 
     func stopDetection() {
+        log(message: "Detection stopped");
         if(self.available && self.updatingActivities) {
             self.updatingActivities = false;
 
