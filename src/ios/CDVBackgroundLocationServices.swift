@@ -128,11 +128,11 @@ var activityCommandDelegate:CDVCommandDelegate?;
         enabled = true;
 
         log(message: "Are we in the background? \(background)");
-
-        if(background) {
+        //starts anyway
+        //if(background) {
             locationManager.startUpdating(force: false);
             activityManager.startDetection();
-        }
+        //}
         ;
 
         let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK)
