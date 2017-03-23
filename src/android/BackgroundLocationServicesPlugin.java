@@ -214,7 +214,7 @@ public class BackgroundLocationServicesPlugin extends CordovaPlugin {
                 isEnabled = true;
                 callbackContext.success();
 
-                Activity activity = this.cordova.getActivity();
+                //Activity activity = this.cordova.getActivity();
                 activity.sendBroadcast(new Intent(Constants.START_RECORDING));
 
             } else {
