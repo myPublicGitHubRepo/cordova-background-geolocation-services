@@ -79,63 +79,64 @@ public class BackgroundLocationServicesPlugin extends CordovaPlugin {
 
     public static final int START_REQ_CODE = 0;
     public static final int PERMISSION_DENIED_ERROR = 20;
-    protected final static String[] permissions = { Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION };
+    protected final static String[] permissions = { Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION };
 
     // Used to (un)bind the service to with the activity
     private final ServiceConnection serviceConnection = new ServiceConnection() {
-      @Override
-      public void onServiceConnected(ComponentName name, IBinder binder) {
-          // Nothing to do here
-          Log.i(TAG, "SERVICE CONNECTED TO MAIN ACTIVITY");
-      }
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder binder) {
+            // Nothing to do here
+            Log.i(TAG, "SERVICE CONNECTED TO MAIN ACTIVITY");
+        }
 
-      @Override
-      public void onServiceDisconnected(ComponentName name) {
-        // Nothing to do here
-        Log.i(TAG, "SERVICE DISCONNECTED");
-      }
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            // Nothing to do here
+            Log.i(TAG, "SERVICE DISCONNECTED");
+        }
     };
 
     private BroadcastReceiver detectedActivitiesReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, final Intent intent) {
 
-          cordova.getThreadPool().execute(new Runnable() {
-              public void run() {
-                Log.i(TAG, "Received Detected Activities");
-                ArrayList<DetectedActivity> updatedActivities =
-                intent.getParcelableArrayListExtra(Constants.ACTIVITY_EXTRA);
+            cordova.getThreadPool().execute(new Runnable() {
+                public void run() {
+                    Log.i(TAG, "Received Detected Activities");
+                    ArrayList<DetectedActivity> updatedActivities = intent
+                            .getParcelableArrayListExtra(Constants.ACTIVITY_EXTRA);
 
-                JSONObject daJSON = new JSONObject();
+                    JSONObject daJSON = new JSONObject();
 
-                for(DetectedActivity da: updatedActivities) {
-                  try {
-                    daJSON.put(Constants.getActivityString(da.getType()), da.getConfidence());
-                  } catch(JSONException e) {
-                    Log.e(TAG, "Error putting JSON value" + e);
-                  }
+                    for (DetectedActivity da : updatedActivities) {
+                        try {
+                            daJSON.put(Constants.getActivityString(da.getType()), da.getConfidence());
+                        } catch (JSONException e) {
+                            Log.e(TAG, "Error putting JSON value" + e);
+                        }
+                    }
+
+                    if (detectedActivitiesCallback != null) {
+                        PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, daJSON);
+                        pluginResult.setKeepCallback(true);
+                        detectedActivitiesCallback.sendPluginResult(pluginResult);
+                    }
                 }
-
-                if(detectedActivitiesCallback != null) {
-                  PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, daJSON);
-                  pluginResult.setKeepCallback(true);
-                  detectedActivitiesCallback.sendPluginResult(pluginResult);
-                }
-              }
-          });
-      }
+            });
+        }
     };
 
     private BroadcastReceiver locationUpdateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, final Intent intent) {
-            if(debug()) {
+            if (debug()) {
                 Log.d(TAG, "Location Received, ready for callback");
             }
             if (locationUpdateCallback != null) {
 
-                if(debug()) {
-                  Toast.makeText(context, "We received a location update", Toast.LENGTH_SHORT).show();
+                if (debug()) {
+                    Toast.makeText(context, "We received a location update", Toast.LENGTH_SHORT).show();
                 }
 
                 final Bundle b = intent.getExtras();
@@ -145,11 +146,11 @@ public class BackgroundLocationServicesPlugin extends CordovaPlugin {
                     public void run() {
                         PluginResult pluginResult;
 
-                        if(b == null) {
+                        if (b == null) {
                             String unkownError = "An Unkown Error has occurred, there was no Location attached";
                             pluginResult = new PluginResult(PluginResult.Status.ERROR, unkownError);
 
-                        } else if(errorString != null) {
+                        } else if (errorString != null) {
                             Log.d(TAG, "ERROR " + errorString);
                             pluginResult = new PluginResult(PluginResult.Status.ERROR, errorString);
 
@@ -158,15 +159,16 @@ public class BackgroundLocationServicesPlugin extends CordovaPlugin {
                             pluginResult = new PluginResult(PluginResult.Status.OK, data);
                         }
 
-                        if(pluginResult != null) {
+                        if (pluginResult != null) {
                             pluginResult.setKeepCallback(true);
                             locationUpdateCallback.sendPluginResult(pluginResult);
                         }
                     }
                 });
             } else {
-                if(debug()) {
-                  Toast.makeText(context, "We received a location update but locationUpdate was null", Toast.LENGTH_SHORT).show();
+                if (debug()) {
+                    Toast.makeText(context, "We received a location update but locationUpdate was null",
+                            Toast.LENGTH_SHORT).show();
                 }
                 Log.w(TAG, "WARNING LOCATION UPDATE CALLBACK IS NULL, PLEASE RUN REGISTER LOCATION UPDATES");
             }
@@ -175,14 +177,14 @@ public class BackgroundLocationServicesPlugin extends CordovaPlugin {
 
     @Override
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
-      super.initialize(cordova, webView);
+        super.initialize(cordova, webView);
 
-      Activity activity = this.cordova.getActivity();
+        Activity activity = this.cordova.getActivity();
 
-      APP_NAME = getApplicationName(activity);
-      //Need To namespace these in case more than one app is running this bg plugin
-      Constants.LOCATION_UPDATE = APP_NAME + Constants.LOCATION_UPDATE;
-      Constants.DETECTED_ACTIVITY_UPDATE = APP_NAME + Constants.DETECTED_ACTIVITY_UPDATE;
+        APP_NAME = getApplicationName(activity);
+        //Need To namespace these in case more than one app is running this bg plugin
+        Constants.LOCATION_UPDATE = APP_NAME + Constants.LOCATION_UPDATE;
+        Constants.DETECTED_ACTIVITY_UPDATE = APP_NAME + Constants.DETECTED_ACTIVITY_UPDATE;
     }
 
     public boolean execute(String action, JSONArray data, CallbackContext callbackContext) {
@@ -193,19 +195,19 @@ public class BackgroundLocationServicesPlugin extends CordovaPlugin {
         updateServiceIntent = new Intent(activity, BackgroundLocationUpdateService.class);
 
         if (ACTION_START.equalsIgnoreCase(action) && !isEnabled) {
-              result = true;
+            result = true;
 
-              updateServiceIntent.putExtra("desiredAccuracy", desiredAccuracy);
-              updateServiceIntent.putExtra("distanceFilter", distanceFilter);
-              updateServiceIntent.putExtra("desiredAccuracy", desiredAccuracy);
-              updateServiceIntent.putExtra("isDebugging", isDebugging);
-              updateServiceIntent.putExtra("notificationTitle", notificationTitle);
-              updateServiceIntent.putExtra("notificationText", notificationText);
-              updateServiceIntent.putExtra("interval", interval);
-              updateServiceIntent.putExtra("fastestInterval", fastestInterval);
-              updateServiceIntent.putExtra("aggressiveInterval", aggressiveInterval);
-              updateServiceIntent.putExtra("activitiesInterval", activitiesInterval);
-              updateServiceIntent.putExtra("useActivityDetection", useActivityDetection);
+            updateServiceIntent.putExtra("desiredAccuracy", desiredAccuracy);
+            updateServiceIntent.putExtra("distanceFilter", distanceFilter);
+            updateServiceIntent.putExtra("desiredAccuracy", desiredAccuracy);
+            updateServiceIntent.putExtra("isDebugging", isDebugging);
+            updateServiceIntent.putExtra("notificationTitle", notificationTitle);
+            updateServiceIntent.putExtra("notificationText", notificationText);
+            updateServiceIntent.putExtra("interval", interval);
+            updateServiceIntent.putExtra("fastestInterval", fastestInterval);
+            updateServiceIntent.putExtra("aggressiveInterval", aggressiveInterval);
+            updateServiceIntent.putExtra("activitiesInterval", activitiesInterval);
+            updateServiceIntent.putExtra("useActivityDetection", useActivityDetection);
 
             if (hasPermisssion()) {
                 isServiceBound = bindServiceToWebview(activity, updateServiceIntent);
@@ -224,7 +226,7 @@ public class BackgroundLocationServicesPlugin extends CordovaPlugin {
 
             result = unbindServiceFromWebview(activity, updateServiceIntent);
 
-            if(result) {
+            if (result) {
                 callbackContext.success();
             } else {
                 callbackContext.error("Failed To Stop The Service");
@@ -246,8 +248,6 @@ public class BackgroundLocationServicesPlugin extends CordovaPlugin {
                 this.useActivityDetection = data.getString(9);
                 this.activitiesInterval = data.getString(10);
 
-
-
             } catch (JSONException e) {
                 Log.d(TAG, "Json Exception" + e);
                 callbackContext.error("JSON Exception" + e.getMessage());
@@ -256,35 +256,38 @@ public class BackgroundLocationServicesPlugin extends CordovaPlugin {
             result = true;
             // TODO reconfigure Service
             callbackContext.success();
-        } else if(ACTION_GET_VERSION.equalsIgnoreCase(action)) {
+        } else if (ACTION_GET_VERSION.equalsIgnoreCase(action)) {
             result = true;
             callbackContext.success(PLUGIN_VERSION);
-        } else if(ACTION_REGISTER_FOR_LOCATION_UPDATES.equalsIgnoreCase(action)) {
+        } else if (ACTION_REGISTER_FOR_LOCATION_UPDATES.equalsIgnoreCase(action)) {
             result = true;
             //Register the function for repeated location update
             locationUpdateCallback = callbackContext;
-        } else if(ACTION_REGISTER_FOR_ACTIVITY_UPDATES.equalsIgnoreCase(action)) {
-          result = true;
-          detectedActivitiesCallback = callbackContext;
-        } else if(ACTION_AGGRESSIVE_TRACKING.equalsIgnoreCase(action)) {
+        } else if (ACTION_REGISTER_FOR_ACTIVITY_UPDATES.equalsIgnoreCase(action)) {
             result = true;
-            if(isEnabled) {
+            detectedActivitiesCallback = callbackContext;
+        } else if (ACTION_AGGRESSIVE_TRACKING.equalsIgnoreCase(action)) {
+            result = true;
+            if (isEnabled) {
                 this.cordova.getActivity().sendBroadcast(new Intent(Constants.CHANGE_AGGRESSIVE));
                 callbackContext.success();
             } else {
-                callbackContext.error("Tracking not enabled, need to start tracking before starting aggressive tracking");
+                callbackContext
+                        .error("Tracking not enabled, need to start tracking before starting aggressive tracking");
             }
         }
-
+        if (isEnabled) {
+            activity.sendBroadcast(new Intent(Constants.START_RECORDING));
+        }
         return result;
     }
 
     public String getApplicationName(Context context) {
-      return context.getApplicationInfo().loadLabel(context.getPackageManager()).toString();
+        return context.getApplicationInfo().loadLabel(context.getPackageManager()).toString();
     }
 
     public Boolean debug() {
-        if(Boolean.parseBoolean(isDebugging)) {
+        if (Boolean.parseBoolean(isDebugging)) {
             return true;
         } else {
             return false;
@@ -292,56 +295,47 @@ public class BackgroundLocationServicesPlugin extends CordovaPlugin {
     }
 
     private Boolean bindServiceToWebview(Context context, Intent intent) {
-      Boolean didBind = false;
+        Boolean didBind = false;
 
-      try {
-        context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
-        context.startService(intent);
+        try {
+            context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+            context.startService(intent);
 
-        webView.getContext().registerReceiver(locationUpdateReceiver, new IntentFilter(Constants.CALLBACK_LOCATION_UPDATE));
-        webView.getContext().registerReceiver(detectedActivitiesReceiver, new IntentFilter(Constants.CALLBACK_ACTIVITY_UPDATE));
+            webView.getContext().registerReceiver(locationUpdateReceiver,
+                    new IntentFilter(Constants.CALLBACK_LOCATION_UPDATE));
+            webView.getContext().registerReceiver(detectedActivitiesReceiver,
+                    new IntentFilter(Constants.CALLBACK_ACTIVITY_UPDATE));
 
-        didBind = true;
-      } catch(Exception e) {
-        Log.e(TAG, "ERROR BINDING SERVICE" + e);
-      }
+            didBind = true;
+        } catch (Exception e) {
+            Log.e(TAG, "ERROR BINDING SERVICE" + e);
+        }
 
-      return didBind;
+        return didBind;
     }
 
     private Boolean unbindServiceFromWebview(Context context, Intent intent) {
         Boolean didUnbind = false;
 
-      try {
-        context.unbindService(serviceConnection);
-        context.stopService(intent);
+        try {
+            context.unbindService(serviceConnection);
+            context.stopService(intent);
 
-        webView.getContext().unregisterReceiver(locationUpdateReceiver);
-        webView.getContext().unregisterReceiver(detectedActivitiesReceiver);
+            webView.getContext().unregisterReceiver(locationUpdateReceiver);
+            webView.getContext().unregisterReceiver(detectedActivitiesReceiver);
 
-        didUnbind = true;
-      } catch(Exception e) {
-        Log.e(TAG, "ERROR UNBINDING SERVICE" + e);
-      }
+            didUnbind = true;
+        } catch (Exception e) {
+            Log.e(TAG, "ERROR UNBINDING SERVICE" + e);
+        }
 
-      return didUnbind;
+        return didUnbind;
     }
 
     @Override
     public void onPause(boolean multitasking) {
-        if(debug()) {
+        if (debug()) {
             Log.d(TAG, "- locationUpdateReceiver Paused (starting recording = " + String.valueOf(isEnabled) + ")");
-        }
-        if (isEnabled) {
-            Activity activity = this.cordova.getActivity();
-            activity.sendBroadcast(new Intent(Constants.START_RECORDING));
-        }
-    }
-
-    @Override
-    public void onResume(boolean multitasking) {
-        if(debug()) {
-            Log.d(TAG, "- locationUpdateReceiver Resumed (stopping recording)" + String.valueOf(isEnabled));
         }
         if (isEnabled) {
             Activity activity = this.cordova.getActivity();
@@ -349,6 +343,17 @@ public class BackgroundLocationServicesPlugin extends CordovaPlugin {
         }
     }
 
+    @Override
+    public void onResume(boolean multitasking) {
+        if (debug()) {
+            Log.d(TAG, "- locationUpdateReceiver Resumed (stopping recording)" + String.valueOf(isEnabled));
+        }
+        if (isEnabled) {
+
+            Activity activity = this.cordova.getActivity();
+            activity.sendBroadcast(new Intent(Constants.START_RECORDING));
+        }
+    }
 
     private void destroyLocationUpdateReceiver() {
         if (this.receiver != null) {
@@ -371,7 +376,7 @@ public class BackgroundLocationServicesPlugin extends CordovaPlugin {
             data.put("timestamp", b.getDouble("timestamp"));
             data.put("speed", b.getDouble("speed"));
             data.put("heading", b.getDouble("heading"));
-        } catch(JSONException e) {
+        } catch (JSONException e) {
             Log.d(TAG, "ERROR CREATING JSON" + e);
         }
 
@@ -379,38 +384,34 @@ public class BackgroundLocationServicesPlugin extends CordovaPlugin {
     }
 
     public boolean hasPermisssion() {
-        for(String p : permissions)
-        {
-            if(!PermissionHelper.hasPermission(this, p))
-            {
+        for (String p : permissions) {
+            if (!PermissionHelper.hasPermission(this, p)) {
                 return false;
             }
         }
         return true;
     }
 
-
-    public void onRequestPermissionResult(int requestCode, String[] permissions,
-                                          int[] grantResults) throws JSONException {
+    public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults)
+            throws JSONException {
         for (int r : grantResults) {
             if (r == PackageManager.PERMISSION_DENIED) {
                 Log.d(TAG, "Permission Denied!");
                 PluginResult result = new PluginResult(PluginResult.Status.ERROR, PERMISSION_DENIED_ERROR);
 
-                if(this.startCallback != null) {
+                if (this.startCallback != null) {
                     startCallback.sendPluginResult(result);
                 }
                 return;
             }
         }
         switch (requestCode) {
-            case START_REQ_CODE:
-                isServiceBound = bindServiceToWebview(cordova.getActivity(), updateServiceIntent);
-                isEnabled = true;
-                break;
+        case START_REQ_CODE:
+            isServiceBound = bindServiceToWebview(cordova.getActivity(), updateServiceIntent);
+            isEnabled = true;
+            break;
         }
     }
-
 
     /**
      * Override method in CordovaPlugin.
@@ -419,7 +420,7 @@ public class BackgroundLocationServicesPlugin extends CordovaPlugin {
     public void onDestroy() {
         Activity activity = this.cordova.getActivity();
 
-        if(isEnabled) {
+        if (isEnabled) {
             activity.stopService(updateServiceIntent);
             unbindServiceFromWebview(activity, updateServiceIntent);
         }
